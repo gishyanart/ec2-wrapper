@@ -188,13 +188,14 @@ add() {
 }
 
 delete() {
+    local _name
     if [ "${1}" ]
     then
-        _id="${1}"
+        _name="${1}"
     else
-        read -r -p 'Input EC2 InstanceID (required): ' _id
+        read -r -p 'Input EC2 InstanceID (required): ' _name
     fi
-    NAME="${_id}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/mssh.conf"
+    NAME="${_name}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/mssh.conf"
 
 }
 
