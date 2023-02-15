@@ -23,29 +23,16 @@ chmod +x ./mssh_c
 cp mssh_c ~/.local/bin/
 ```
 
-To enable autocompletion, run:
+### To enable autocompletion, run
+
+#### With `~/.bashrc`
 
 ```bash
-# Put it on .bashrc
 echo 'source <(mssh_c completion)' >> ~/.bashrc
 ```
 
-or, if you have `bash-completion` installed, put it in the file of `bash-completion` directory:
-
-### For `pacman` distros
+#### With `bash-completion`
 
 ```bash
 mssh_c completion | sudo tee /usr/share/bash-completion/completions/mssh_c
-```
-
-### For `deb` distros
-
-```bash
-mssh_c completion | sudo tee /etc/bash_completion.d/mssh_c
-```
-
-### For `rpm` distros
-
-```bash
-mssh_c completion | sudo tee /usr/share/bash-completion/mssh_c
 ```
