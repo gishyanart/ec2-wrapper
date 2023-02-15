@@ -19,8 +19,8 @@ AWS provides `mssh` command ([ec2instanceconnectcli](https://pypi.org/project/ec
 Make `mssh_c` executable and put somewhere in the `$PATH`
 
 ```bash
-chmod +x ./mssh_c
-cp mssh_c ~/.local/bin/
+chmod +x ./mssh_c.sh
+cp mssh_c.sh ~/.local/bin/
 ```
 
 ### To enable autocompletion, run
