@@ -194,7 +194,7 @@ delete() {
     else
         read -r -p 'Input EC2 InstanceID (required): ' _id
     fi
-    ID="${_id}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/mssh.conf"
+    NAME="${_id}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/mssh.conf"
 
 }
 
