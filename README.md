@@ -26,7 +26,7 @@ Make `ec2` executable and put somewhere in the `$PATH`
 export SCRIPT_NAME=ec2.sh # Or any name you prefer
 cp ec2.sh ~/.local/bin/"${SCRIPT_NAME}"
 chmod +x ~/.local/bin/"${SCRIPT_NAME}"
-bash --login
+exec bash --login
 ```
 
 ### To enable autocompletion, run
@@ -35,7 +35,7 @@ bash --login
 
 ```bash
 echo "source <(${SCRIPT_NAME} completion)" >> ~/.bashrc
-bash
+exec bash
 ```
 
 #### With `bash-completion`
