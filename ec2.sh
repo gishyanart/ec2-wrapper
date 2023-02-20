@@ -5,17 +5,17 @@ usage() {
   Usage: ${0##*/} command [INSTANCE_NAME]
   Commands:
     ${0##*/} add     [INSTANCE_NAME]:    Add configuration preset
-    ${0##*/} connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'mssh'
+    ${0##*/} connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'mssh'
     ${0##*/} delete  [INSTANCE_NAME]:    Delete configuration presets for INSTANCE_ID
-    ${0##*/} start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
-    ${0##*/} stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
-    ${0##*/} reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
-    ${0##*/} terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
+    ${0##*/} start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
+    ${0##*/} stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
+    ${0##*/} reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
+    ${0##*/} terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
     ${0##*/} completion:                 Output bash completion script
     ${0##*/} show:                       Show preset configuration
     ${0##*/} init:                       Create config file in ~/.config and check requirements: grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
   Arguments:
-    INSTANCE_NAME: EC2 instance name defined in the '~/.config/${0##*/}.conf' file
+    INSTANCE_NAME: EC2 instance name defined in the '~/.config/${0##*/}.yaml' file
   Options:
     -h, --help:   Print this message and exit
 "
@@ -38,7 +38,7 @@ __complete_mssh_c() {
     then
       return
     fi
-    mapfile -t instance_names <<<\"\$(yq '.configs | keys' \"\$HOME/.config/${0##*/}.conf\"  | cut -d' ' -f2)\"
+    mapfile -t instance_names <<<\"\$(yq '.configs | keys' \"\$HOME/.config/${0##*/}.yaml\"  | cut -d' ' -f2)\"
     mapfile -t COMPREPLY <<<\"\$(compgen -W \"\${instance_names[*]}\" -- \"\${COMP_WORDS[2]}\")\"
     return
   else
@@ -101,21 +101,21 @@ init() {
         exit 1
     fi
 
-    if ! [ -f "$HOME/.config/${0##*/}.conf" ] || ! ( grep '^configs:' "$HOME/.config/${0##*/}.conf" &>/dev/null )
+    if ! [ -f "$HOME/.config/${0##*/}.yaml" ] || ! ( grep '^configs:' "$HOME/.config/${0##*/}.yaml" &>/dev/null )
     then
         mkdir -p "$HOME/.config/"
-        echo 'configs: {}' > "$HOME/.config/${0##*/}.conf"
-        chmod 600 "$HOME/.config/${0##*/}.conf"
-        echo "Configuration file '$HOME/.config/${0##*/}.conf' created."
+        echo 'configs: {}' > "$HOME/.config/${0##*/}.yaml"
+        chmod 600 "$HOME/.config/${0##*/}.yaml"
+        echo "Configuration file '$HOME/.config/${0##*/}.yaml' created."
     else
-        echo "Valid configuration file '$HOME/.config/${0##*/}.conf' exists"
-        chmod 600 "$HOME/.config/${0##*/}.conf"
+        echo "Valid configuration file '$HOME/.config/${0##*/}.yaml' exists"
+        chmod 600 "$HOME/.config/${0##*/}.yaml"
     fi
 
 }
 
 show() {
-    yq .configs "$HOME/.config/${0##*/}.conf"
+    yq .configs "$HOME/.config/${0##*/}.yaml"
 
 }
 
@@ -173,18 +173,18 @@ add() {
     fi
     export ID="${_id}"
     export NAME="${_name}"
-    yq eval -i ".configs.[env(NAME)].instance_id = env(ID)" "$HOME/.config/${0##*/}.conf"
+    yq eval -i ".configs.[env(NAME)].instance_id = env(ID)" "$HOME/.config/${0##*/}.yaml"
     if [ "${_profile}" ]
     then
-        PROFILE="${_profile}" yq eval -i ".configs.[env(NAME)].profile = env(PROFILE)" "$HOME/.config/${0##*/}.conf"
+        PROFILE="${_profile}" yq eval -i ".configs.[env(NAME)].profile = env(PROFILE)" "$HOME/.config/${0##*/}.yaml"
     fi
     if [ "${_access_key}" ] && [ "${_secret_key}" ]
     then
-        KEY="${_access_key}" yq eval -i ".configs.[env(NAME)].access_key = env(KEY)" "$HOME/.config/${0##*/}.conf"
-        SECRET="${_secret_key}" yq eval -i ".configs.[env(NAME)].secret_key = env(SECRET)" "$HOME/.config/${0##*/}.conf"
+        KEY="${_access_key}" yq eval -i ".configs.[env(NAME)].access_key = env(KEY)" "$HOME/.config/${0##*/}.yaml"
+        SECRET="${_secret_key}" yq eval -i ".configs.[env(NAME)].secret_key = env(SECRET)" "$HOME/.config/${0##*/}.yaml"
     fi
-    REGION="${_region}" yq eval -i ".configs.[env(NAME)].region = env(REGION)" "$HOME/.config/${0##*/}.conf"
-    I_USER="${_user}" yq eval -i ".configs.[env(NAME)].user = env(I_USER)" "$HOME/.config/${0##*/}.conf"
+    REGION="${_region}" yq eval -i ".configs.[env(NAME)].region = env(REGION)" "$HOME/.config/${0##*/}.yaml"
+    I_USER="${_user}" yq eval -i ".configs.[env(NAME)].user = env(I_USER)" "$HOME/.config/${0##*/}.yaml"
 
 }
 
@@ -196,7 +196,7 @@ delete() {
     else
         read -r -p 'Input EC2 InstanceID (required): ' _name
     fi
-    NAME="${_name}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/${0##*/}.conf"
+    NAME="${_name}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/${0##*/}.yaml"
 
 }
 
@@ -209,17 +209,17 @@ __do_work() {
     fi
 
     export NAME="${_name}" 
-    name="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.conf")"
+    name="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.yaml")"
     if ! [ "${name}" ]
     then
         echo -e "\n  Configuration preset for ${NAME} is missing.\n Try '${0##*/} add [NAME]' to configure.\n"
         exit 1
     fi
-    _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/${0##*/}.conf")"
-    _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/${0##*/}.conf")"
-    _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/${0##*/}.conf")"
-    _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.conf")"
-    _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.conf")"
+    _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/${0##*/}.yaml")"
+    _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/${0##*/}.yaml")"
+    _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/${0##*/}.yaml")"
+    _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.yaml")"
+    _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.yaml")"
 
     if [ "${_profile}" ]
     then
@@ -239,18 +239,18 @@ __do_work() {
 
 connect() {
     export NAME="${1}"
-    CONFIG_NAME="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.conf")"
+    CONFIG_NAME="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.yaml")"
     if [ "${CONFIG_NAME}" == 'null' ]
     then
         echo -e "\n  Configuration preset for ${NAME} is missing.\n Try '${0##*/} add [NAME]' to configure.\n"
         exit 1
     else
-        _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/${0##*/}.conf")"
-        _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/${0##*/}.conf")"
-        _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/${0##*/}.conf")"
-        _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.conf")"
-        _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.conf")"
-        _user="$(yq '.configs.[env(NAME)].user' "$HOME/.config/${0##*/}.conf")"
+        _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/${0##*/}.yaml")"
+        _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/${0##*/}.yaml")"
+        _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/${0##*/}.yaml")"
+        _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.yaml")"
+        _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.yaml")"
+        _user="$(yq '.configs.[env(NAME)].user' "$HOME/.config/${0##*/}.yaml")"
 
         if [ "${_user}" == 'ubuntu' ] 
         then
@@ -308,7 +308,7 @@ __set_aws() {
 
 for i in "$@"
 do
-    if [ $i == '-h' ] || [ $i == '-help' ]
+    if [ "${i}" == '-h' ] || [ "${i}" == '-help' ]
     then
         usage
         exit
