@@ -1,27 +1,23 @@
 #!/usr/bin/env bash
-
-CURRENT_PROFILE="${AWS_PROFILE}"
-unset AWS_PROFILE
-CURRENT_ACCESS_KEY="${AWS_ACCESS_KEY_ID}"
-unset AWS_ACCESS_KEY_ID
-CURRENT_SECRET_KEY="${AWS_SECRET_ACCESS_KEY}"
-unset AWS_SECRET_ACCESS_KEY
-CURRENT_SESSION_TOKEN="${AWS_SESSION_TOKEN}"
-unset AWS_SESSION_TOKEN
         
 usage() {
     echo "
-  ${0##*/} connect   INSTANCE_NAME:    Connect to AWS EC2 instance with using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'mssh'
-  ${0##*/} start     INSTANCE_NAME:    Connect to AWS EC2 instance with using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
-  ${0##*/} stop      INSTANCE_NAME:    Connect to AWS EC2 instance with using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
-  ${0##*/} add     [INSTANCE_NAME]:    Add configuration preset
-  ${0##*/} delete  [INSTANCE_NAME]:    Delete configuration presets for INSTANCE_ID
-  ${0##*/} show:                       Show preset configuration
-  ${0##*/} completion:                 Output bash completion script
-  ${0##*/} init:                       Create config file in ~/.config and check requirements: grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
-  
-  Opttions:
-    -h:   Print this message and exit
+  Usage: ${0##*/} command [INSTANCE_NAME]
+  Commands:
+    ${0##*/} add     [INSTANCE_NAME]:    Add configuration preset
+    ${0##*/} connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'mssh'
+    ${0##*/} delete  [INSTANCE_NAME]:    Delete configuration presets for INSTANCE_ID
+    ${0##*/} start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
+    ${0##*/} stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
+    ${0##*/} reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
+    ${0##*/} terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
+    ${0##*/} completion:                 Output bash completion script
+    ${0##*/} show:                       Show preset configuration
+    ${0##*/} init:                       Create config file in ~/.config and check requirements: grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
+  Arguments:
+    INSTANCE_NAME: EC2 instance name defined in the '~/.config/mssh.conf' file
+  Options:
+    -h, --help:   Print this message and exit
 "
 
 }
@@ -34,7 +30,7 @@ __complete_mssh_c() {
   prev=\"\${COMP_WORDS[COMP_CWORD-1]}\"
   if [[ \${COMP_CWORD} -eq 1 ]]
   then
-     mapfile -t COMPREPLY <<< \"\$(compgen -W \"add connect delete start stop completion show init\" -- \"\${COMP_WORDS[1]}\")\"
+     mapfile -t COMPREPLY <<< \"\$(compgen -W \"add connect delete start stop reboot terminate completion show init\" -- \"\${COMP_WORDS[1]}\")\"
      return
   elif [[ \${COMP_CWORD} -eq 2 ]]
   then
@@ -51,9 +47,9 @@ __complete_mssh_c() {
 }
 
 if [[ \$(type -t compopt) = \"builtin\" ]]; then
-    complete  -F __complete_mssh_c mssh_c
+    complete  -F __complete_mssh_c ${0##*/}
 else
-    complete  -o nospace -F __complete_mssh_c mssh_c
+    complete  -o nospace -F __complete_mssh_c ${0##*/}
 fi
 "
 
@@ -75,6 +71,9 @@ init() {
     then
         echo "Error: requirement 'pip for python3' is not available"
         error=True
+    elif ! ( command -v yq &>/dev/null )
+    then
+      echo "Error: requirement 'mikefarah/yq' is not available"
     elif ! ( grep -F 'https://github.com/mikefarah/yq/' <<< "$(yq --version)" &>/dev/null )
     then
         echo "Error: requirement 'mikefarah/yq' is not available"
@@ -102,13 +101,15 @@ init() {
         exit 1
     fi
 
-    if ! [ -f "$HOME/.config/mssh.conf" ] || ! ( grep 'configs:' "$HOME/.config/mssh.conf" &>/dev/null )
+    if ! [ -f "$HOME/.config/mssh.conf" ] || ! ( grep '^configs:' "$HOME/.config/mssh.conf" &>/dev/null )
     then
         mkdir -p "$HOME/.config/"
         echo 'configs: {}' > "$HOME/.config/mssh.conf"
+        chmod 600 "$HOME/.config/mssh.conf"
         echo "Configuration file '$HOME/.config/mssh.conf' created."
     else
         echo "Valid configuration file '$HOME/.config/mssh.conf' exists"
+        chmod 600 "$HOME/.config/mssh.conf"
     fi
 
 }
@@ -297,6 +298,30 @@ connect() {
     fi
 }
 
+unset_aws() {
+    
+    CURRENT_PROFILE="${AWS_PROFILE}"
+    unset AWS_PROFILE
+    CURRENT_ACCESS_KEY="${AWS_ACCESS_KEY_ID}"
+    unset AWS_ACCESS_KEY_ID
+    CURRENT_SECRET_KEY="${AWS_SECRET_ACCESS_KEY}"
+    unset AWS_SECRET_ACCESS_KEY
+    CURRENT_SESSION_TOKEN="${AWS_SESSION_TOKEN}"
+    unset AWS_SESSION_TOKEN
+
+}
+
+for i in "$@"
+do
+    if [ $i == '-h' ] || [ $i == '-help' ]
+    then
+        usage
+        exit
+    fi
+done
+
+
+
 case "${1}" in
     add)
         add "${2}"
@@ -305,15 +330,26 @@ case "${1}" in
         delete "${2}"
     ;;
     start)
+        unset_aws
         __do_work "${2}" "start-instances"
     ;;
     stop)
+        unset_aws
         __do_work "${2}" "stop-instances"
+    ;;
+    reboot)
+        unset_aws
+        __do_work "${2}" "reboot-instances"
+    ;;
+    terminate)
+        unset_aws
+        __do_work "${2}" "terminate-instances"
     ;;
     completion)
         completion
     ;;
     connect)
+        unset_aws
         connect "${2}"
     ;;
     show)

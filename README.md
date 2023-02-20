@@ -1,9 +1,6 @@
 # Description
 
-AWS provides `mssh` command ([ec2instanceconnectcli](https://pypi.org/project/ec2instanceconnectcli/)) to easily connect EC2 instances using IAM permissions. By itself it doesn't provide configuration. This script is a wrapper on `mssh` that allows:
-
-- creation of configuration presets for instances and using them to easily connect after
-- start/stop instances
+Wrapper script on [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) and [msshe(c2instanceconnectcli)](https://pypi.org/project/ec2instanceconnectcli/) to easily manage EC2 instances using IAM permissions with configuration preset.
 
 ## Requirements
 
@@ -16,11 +13,19 @@ AWS provides `mssh` command ([ec2instanceconnectcli](https://pypi.org/project/ec
 
 ## Installation
 
-Make `mssh_c` executable and put somewhere in the `$PATH`
+Clone the repo
 
 ```bash
-chmod +x ./mssh_c.sh
-cp mssh_c.sh ~/.local/bin/
+git clone https://github.com/gishyanart/ec2-wrapper
+cd ec2-wrapper
+```
+
+Make `ec2` executable and put somewhere in the `$PATH`
+
+```bash
+SCRIPT_NAME=ec2.sh # Or any name you prefer
+cp ec2.sh ~/.local/bin/"${SCRIPT_NAME}"
+chmod +x ~/.local/bin/"${SCRIPT_NAME}"
 ```
 
 ### To enable autocompletion, run
@@ -28,11 +33,11 @@ cp mssh_c.sh ~/.local/bin/
 #### With `~/.bashrc`
 
 ```bash
-echo 'source <(mssh_c completion)' >> ~/.bashrc
+echo "source <(${SCRIPT_NAME} completion)" >> ~/.bashrc
 ```
 
 #### With `bash-completion`
 
 ```bash
-mssh_c completion | sudo tee /usr/share/bash-completion/completions/mssh_c
+${SCRIPT_NAME} completion | sudo tee /usr/share/bash-completion/completions/"${SCRIPT_NAME}"
 ```
