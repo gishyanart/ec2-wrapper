@@ -23,7 +23,7 @@ cd ec2-wrapper
 Make `ec2` executable and put somewhere in the `$PATH`
 
 ```bash
-SCRIPT_NAME=ec2.sh # Or any name you prefer
+export SCRIPT_NAME=ec2.sh # Or any name you prefer
 cp ec2.sh ~/.local/bin/"${SCRIPT_NAME}"
 chmod +x ~/.local/bin/"${SCRIPT_NAME}"
 bash --login
