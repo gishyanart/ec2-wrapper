@@ -35,6 +35,7 @@ bash --login
 
 ```bash
 echo "source <(${SCRIPT_NAME} completion)" >> ~/.bashrc
+bash
 ```
 
 #### With `bash-completion`
