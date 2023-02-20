@@ -5,17 +5,17 @@ usage() {
   Usage: ${0##*/} command [INSTANCE_NAME]
   Commands:
     ${0##*/} add     [INSTANCE_NAME]:    Add configuration preset
-    ${0##*/} connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'mssh'
+    ${0##*/} connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'mssh'
     ${0##*/} delete  [INSTANCE_NAME]:    Delete configuration presets for INSTANCE_ID
-    ${0##*/} start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
-    ${0##*/} stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
-    ${0##*/} reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
-    ${0##*/} terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/mssh.conf using 'aws'
+    ${0##*/} start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
+    ${0##*/} stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
+    ${0##*/} reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
+    ${0##*/} terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.conf using 'aws'
     ${0##*/} completion:                 Output bash completion script
     ${0##*/} show:                       Show preset configuration
     ${0##*/} init:                       Create config file in ~/.config and check requirements: grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
   Arguments:
-    INSTANCE_NAME: EC2 instance name defined in the '~/.config/mssh.conf' file
+    INSTANCE_NAME: EC2 instance name defined in the '~/.config/${0##*/}.conf' file
   Options:
     -h, --help:   Print this message and exit
 "
@@ -38,7 +38,7 @@ __complete_mssh_c() {
     then
       return
     fi
-    mapfile -t instance_names <<<\"\$(yq '.configs | keys' \"\$HOME/.config/mssh.conf\"  | cut -d' ' -f2)\"
+    mapfile -t instance_names <<<\"\$(yq '.configs | keys' \"\$HOME/.config/${0##*/}.conf\"  | cut -d' ' -f2)\"
     mapfile -t COMPREPLY <<<\"\$(compgen -W \"\${instance_names[*]}\" -- \"\${COMP_WORDS[2]}\")\"
     return
   else
@@ -101,21 +101,21 @@ init() {
         exit 1
     fi
 
-    if ! [ -f "$HOME/.config/mssh.conf" ] || ! ( grep '^configs:' "$HOME/.config/mssh.conf" &>/dev/null )
+    if ! [ -f "$HOME/.config/${0##*/}.conf" ] || ! ( grep '^configs:' "$HOME/.config/${0##*/}.conf" &>/dev/null )
     then
         mkdir -p "$HOME/.config/"
-        echo 'configs: {}' > "$HOME/.config/mssh.conf"
-        chmod 600 "$HOME/.config/mssh.conf"
-        echo "Configuration file '$HOME/.config/mssh.conf' created."
+        echo 'configs: {}' > "$HOME/.config/${0##*/}.conf"
+        chmod 600 "$HOME/.config/${0##*/}.conf"
+        echo "Configuration file '$HOME/.config/${0##*/}.conf' created."
     else
-        echo "Valid configuration file '$HOME/.config/mssh.conf' exists"
-        chmod 600 "$HOME/.config/mssh.conf"
+        echo "Valid configuration file '$HOME/.config/${0##*/}.conf' exists"
+        chmod 600 "$HOME/.config/${0##*/}.conf"
     fi
 
 }
 
 show() {
-    yq .configs "$HOME/.config/mssh.conf"
+    yq .configs "$HOME/.config/${0##*/}.conf"
 
 }
 
@@ -140,7 +140,7 @@ add() {
     read -r -p "Input AWS_PROFILE (optional): " _profile
     if ! [ "${_profile}" ]
     then
-        read -r -p "Input AWS_ACCESS_KEY_ID (optional): " _access_key
+        read -r -s -p "Input AWS_ACCESS_KEY_ID (optional): " _access_key
     fi
     if [ "${_profile}" ] && ! ( grep '\[.*\]' "$HOME/.aws/config" | grep -F " ${_profile}]" &>/dev/null )
     then
@@ -151,7 +151,7 @@ add() {
         echo Error: None of AWS_PROFILE or AWS_ACCESS_KEY_ID provided
         exit 1
     fi
-    read -r -p "Input AWS_SECRET_ACCESS_KEY (optional): " _secret_key
+    read -r -s -p "Input AWS_SECRET_ACCESS_KEY (optional): " _secret_key
     if [ "${_access_key}" ] && ! [ "${_secret_key}" ]
     then
         echo Error: AWS_SECRET_ACCESS_KEY is not provided
@@ -173,18 +173,18 @@ add() {
     fi
     export ID="${_id}"
     export NAME="${_name}"
-    yq eval -i ".configs.[env(NAME)].instance_id = env(ID)" "$HOME/.config/mssh.conf"
+    yq eval -i ".configs.[env(NAME)].instance_id = env(ID)" "$HOME/.config/${0##*/}.conf"
     if [ "${_profile}" ]
     then
-        PROFILE="${_profile}" yq eval -i ".configs.[env(NAME)].profile = env(PROFILE)" "$HOME/.config/mssh.conf"
+        PROFILE="${_profile}" yq eval -i ".configs.[env(NAME)].profile = env(PROFILE)" "$HOME/.config/${0##*/}.conf"
     fi
     if [ "${_access_key}" ] && [ "${_secret_key}" ]
     then
-        KEY="${_access_key}" yq eval -i ".configs.[env(NAME)].access_key = env(KEY)" "$HOME/.config/mssh.conf"
-        SECRET="${_secret_key}" yq eval -i ".configs.[env(NAME)].secret_key = env(SECRET)" "$HOME/.config/mssh.conf"
+        KEY="${_access_key}" yq eval -i ".configs.[env(NAME)].access_key = env(KEY)" "$HOME/.config/${0##*/}.conf"
+        SECRET="${_secret_key}" yq eval -i ".configs.[env(NAME)].secret_key = env(SECRET)" "$HOME/.config/${0##*/}.conf"
     fi
-    REGION="${_region}" yq eval -i ".configs.[env(NAME)].region = env(REGION)" "$HOME/.config/mssh.conf"
-    I_USER="${_user}" yq eval -i ".configs.[env(NAME)].user = env(I_USER)" "$HOME/.config/mssh.conf"
+    REGION="${_region}" yq eval -i ".configs.[env(NAME)].region = env(REGION)" "$HOME/.config/${0##*/}.conf"
+    I_USER="${_user}" yq eval -i ".configs.[env(NAME)].user = env(I_USER)" "$HOME/.config/${0##*/}.conf"
 
 }
 
@@ -196,7 +196,7 @@ delete() {
     else
         read -r -p 'Input EC2 InstanceID (required): ' _name
     fi
-    NAME="${_name}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/mssh.conf"
+    NAME="${_name}" yq eval -i 'del(.configs.[env(NAME)])' "$HOME/.config/${0##*/}.conf"
 
 }
 
@@ -209,17 +209,17 @@ __do_work() {
     fi
 
     export NAME="${_name}" 
-    name="$(yq '.configs.[env(NAME)]' "$HOME/.config/mssh.conf")"
+    name="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.conf")"
     if ! [ "${name}" ]
     then
         echo -e "\n  Configuration preset for ${NAME} is missing.\n Try '${0##*/} add [NAME]' to configure.\n"
         exit 1
     fi
-    _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/mssh.conf")"
-    _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/mssh.conf")"
-    _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/mssh.conf")"
-    _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/mssh.conf")"
-    _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/mssh.conf")"
+    _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/${0##*/}.conf")"
+    _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/${0##*/}.conf")"
+    _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/${0##*/}.conf")"
+    _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.conf")"
+    _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.conf")"
 
     if [ "${_profile}" ]
     then
@@ -233,35 +233,24 @@ __do_work() {
         export AWS_ACCESS_KEY_ID="${_access_key}" 
         export AWS_SECRET_ACCESS_KEY="${_secret_key}"
         aws ec2 "${2}" --instance-ids "${_id}" --region "${_region}"
-        if [ "${CURRENT_ACCESS_KEY}" ]
-        then
-            export AWS_ACCESS_KEY_ID="${CURRENT_ACCESS_KEY}"
-        fi
-        if [ "${CURRENT_SECRET_KEY}" ]
-        then
-            export AWS_SECRET_ACCESS_KEY="${CURRENT_SECRET_KEY}"
-        fi
-        if [ "${CURRENT_SESSION_TOKEN}" ]
-        then
-            export AWS_SESSION_TOKEN="${CURRENT_SESSION_TOKEN}"
-        fi
+        __set_aws
     fi
 }
 
 connect() {
     export NAME="${1}"
-    CONFIG_NAME="$(yq '.configs.[env(NAME)]' "$HOME/.config/mssh.conf")"
+    CONFIG_NAME="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.conf")"
     if [ "${CONFIG_NAME}" == 'null' ]
     then
         echo -e "\n  Configuration preset for ${NAME} is missing.\n Try '${0##*/} add [NAME]' to configure.\n"
         exit 1
     else
-        _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/mssh.conf")"
-        _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/mssh.conf")"
-        _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/mssh.conf")"
-        _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/mssh.conf")"
-        _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/mssh.conf")"
-        _user="$(yq '.configs.[env(NAME)].user' "$HOME/.config/mssh.conf")"
+        _id="$(yq '.configs.[env(NAME)].instance_id' "$HOME/.config/${0##*/}.conf")"
+        _profile="$(yq '.configs.[env(NAME)].profile' "$HOME/.config/${0##*/}.conf")"
+        _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/${0##*/}.conf")"
+        _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.conf")"
+        _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.conf")"
+        _user="$(yq '.configs.[env(NAME)].user' "$HOME/.config/${0##*/}.conf")"
 
         if [ "${_user}" == 'ubuntu' ] 
         then
@@ -282,23 +271,12 @@ connect() {
             export AWS_ACCESS_KEY_ID="${_access_key}" 
             export AWS_SECRET_ACCESS_KEY="${_secret_key}"
             mssh "${_connect_host}" -r "${_region}"
-            if [ "${CURRENT_ACCESS_KEY}" ]
-            then
-                export AWS_ACCESS_KEY_ID="${CURRENT_ACCESS_KEY}"
-            fi
-            if [ "${CURRENT_SECRET_KEY}" ]
-            then
-                export AWS_SECRET_ACCESS_KEY="${CURRENT_SECRET_KEY}"
-            fi
-            if [ "${CURRENT_SESSION_TOKEN}" ]
-            then
-                export AWS_SESSION_TOKEN="${CURRENT_SESSION_TOKEN}"
-            fi
+            __set_aws
         fi
     fi
 }
 
-unset_aws() {
+__unset_aws() {
     
     CURRENT_PROFILE="${AWS_PROFILE}"
     unset AWS_PROFILE
@@ -308,6 +286,23 @@ unset_aws() {
     unset AWS_SECRET_ACCESS_KEY
     CURRENT_SESSION_TOKEN="${AWS_SESSION_TOKEN}"
     unset AWS_SESSION_TOKEN
+
+}
+
+__set_aws() {
+    
+    if [ "${CURRENT_ACCESS_KEY}" ]
+    then
+        export AWS_ACCESS_KEY_ID="${CURRENT_ACCESS_KEY}"
+    fi
+    if [ "${CURRENT_SECRET_KEY}" ]
+    then
+        export AWS_SECRET_ACCESS_KEY="${CURRENT_SECRET_KEY}"
+    fi
+    if [ "${CURRENT_SESSION_TOKEN}" ]
+    then
+        export AWS_SESSION_TOKEN="${CURRENT_SESSION_TOKEN}"
+    fi
 
 }
 
@@ -330,26 +325,26 @@ case "${1}" in
         delete "${2}"
     ;;
     start)
-        unset_aws
+        __unset_aws
         __do_work "${2}" "start-instances"
     ;;
     stop)
-        unset_aws
+        __unset_aws
         __do_work "${2}" "stop-instances"
     ;;
     reboot)
-        unset_aws
+        __unset_aws
         __do_work "${2}" "reboot-instances"
     ;;
     terminate)
-        unset_aws
+        __unset_aws
         __do_work "${2}" "terminate-instances"
     ;;
     completion)
         completion
     ;;
     connect)
-        unset_aws
+        __unset_aws
         connect "${2}"
     ;;
     show)
