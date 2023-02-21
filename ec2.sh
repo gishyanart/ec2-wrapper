@@ -151,7 +151,10 @@ add() {
         echo Error: None of AWS_PROFILE or AWS_ACCESS_KEY_ID provided
         exit 1
     fi
-    read -r -s -p "Input AWS_SECRET_ACCESS_KEY (optional): " _secret_key
+    if [ "${_access_key}" ]
+    then
+        read -r -s -p "Input AWS_SECRET_ACCESS_KEY (optional, required if AWS_ACCESS_KEY_ID provided): " _secret_key
+    fi
     if [ "${_access_key}" ] && ! [ "${_secret_key}" ]
     then
         echo Error: AWS_SECRET_ACCESS_KEY is not provided
