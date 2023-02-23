@@ -4,16 +4,17 @@ usage() {
     echo "
   Usage: ${0##*/} command [INSTANCE_NAME]
   Commands:
-    ${0##*/} add     [INSTANCE_NAME]:    Add configuration preset
-    ${0##*/} connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'mssh'
-    ${0##*/} delete  [INSTANCE_NAME]:    Delete configuration presets for INSTANCE_ID
-    ${0##*/} start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
-    ${0##*/} stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
-    ${0##*/} reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
-    ${0##*/} terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/${0##*/}.yaml using 'aws'
-    ${0##*/} completion:                 Output bash completion script
-    ${0##*/} show:                       Show preset configuration
-    ${0##*/} init:                       Create config file in ~/.config and check requirements: grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
+    add     [INSTANCE_NAME]:    Add configuration preset
+    connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'mssh'
+    delete  [INSTANCE_NAME]:    Delete configuration presets for INSTANCE_ID
+    start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'aws'
+    stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'aws'
+    reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'aws'
+    terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'aws'
+    completion:                 Output bash completion script
+    show:                       Show preset configuration
+    init:                       Create config file '~/.config/${0##*/}.yaml' and check requirements: 
+                                  grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
   Arguments:
     INSTANCE_NAME: EC2 instance name defined in the '~/.config/${0##*/}.yaml' file
   Options:
