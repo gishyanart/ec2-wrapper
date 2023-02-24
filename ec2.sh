@@ -28,16 +28,28 @@ completion() {
 echo "
 __complete_mssh_c() {
   local instance_names prev
+  declare -A command_names=( 
+  	[add]=1 
+	[connect]=1 
+	[delete]=1 
+	[start]=1 
+	[stop]=1 
+	[reboot]=1 
+	[terminate]=1 
+	[completion]=1 
+	[show]=1 
+	[init]=1
+  )
   prev=\"\${COMP_WORDS[COMP_CWORD-1]}\"
   if [[ \${COMP_CWORD} -eq 1 ]]
   then
-     mapfile -t COMPREPLY <<< \"\$(compgen -W \"add connect delete start stop reboot terminate completion show init\" -- \"\${COMP_WORDS[1]}\")\"
+     mapfile -t COMPREPLY <<< \"\$(compgen -W \"\${!command_names[*]}\" -- \"\${COMP_WORDS[1]}\")\"
      return
   elif [[ \${COMP_CWORD} -eq 2 ]]
   then
-    if [ \"\${prev}\" == 'add' ] || [ \"\${prev}\" == 'completion' ] || [ \"\${prev}\" == 'init' ]
+    if ! [ \${command_names[\${prev}]} ] || [ \"\${prev}\" == 'add' ] || [ \"\${prev}\" == 'completion' ] || [ \"\${prev}\" == 'init' ]
     then
-      return
+        return
     fi
     mapfile -t instance_names <<<\"\$(yq '.configs | keys' \"\$HOME/.config/${0##*/}.yaml\"  | cut -d' ' -f2)\"
     mapfile -t COMPREPLY <<<\"\$(compgen -W \"\${instance_names[*]}\" -- \"\${COMP_WORDS[2]}\")\"
