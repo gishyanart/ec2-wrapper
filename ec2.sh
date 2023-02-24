@@ -128,7 +128,20 @@ init() {
 }
 
 show() {
-    yq .configs "$HOME/.config/${0##*/}.yaml"
+    local answer
+    if [ "${1}" ]
+    then
+        answer="$(yq ".configs.${1}" "$HOME/.config/${0##*/}.yaml")"
+    else
+        answer="$(yq ".configs" "$HOME/.config/${0##*/}.yaml")"
+    fi
+    
+    if [ "${answer}" == 'null' ]
+    then
+        echo "Configuration for ${1} does not exist"
+    else
+        echo "${answer}" | yq
+    fi
 
 }
 
@@ -364,7 +377,7 @@ case "${1}" in
         connect "${2}"
     ;;
     show)
-        show
+        show "${2}"
     ;;
     init)
         init
