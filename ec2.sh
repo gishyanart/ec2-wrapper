@@ -262,7 +262,6 @@ __do_work() {
         export AWS_ACCESS_KEY_ID="${_access_key}" 
         export AWS_SECRET_ACCESS_KEY="${_secret_key}"
         aws ec2 "${2}" --instance-ids "${_id}" --region "${_region}"
-        __set_aws
     fi
 }
 
@@ -300,40 +299,18 @@ connect() {
             export AWS_ACCESS_KEY_ID="${_access_key}" 
             export AWS_SECRET_ACCESS_KEY="${_secret_key}"
             mssh "${_connect_host}" -r "${_region}"
-            __set_aws
         fi
     fi
 }
 
 __unset_aws() {
-    
-    CURRENT_PROFILE="${AWS_PROFILE}"
     unset AWS_PROFILE
-    CURRENT_ACCESS_KEY="${AWS_ACCESS_KEY_ID}"
     unset AWS_ACCESS_KEY_ID
-    CURRENT_SECRET_KEY="${AWS_SECRET_ACCESS_KEY}"
     unset AWS_SECRET_ACCESS_KEY
-    CURRENT_SESSION_TOKEN="${AWS_SESSION_TOKEN}"
     unset AWS_SESSION_TOKEN
 
 }
 
-__set_aws() {
-    
-    if [ "${CURRENT_ACCESS_KEY}" ]
-    then
-        export AWS_ACCESS_KEY_ID="${CURRENT_ACCESS_KEY}"
-    fi
-    if [ "${CURRENT_SECRET_KEY}" ]
-    then
-        export AWS_SECRET_ACCESS_KEY="${CURRENT_SECRET_KEY}"
-    fi
-    if [ "${CURRENT_SESSION_TOKEN}" ]
-    then
-        export AWS_SESSION_TOKEN="${CURRENT_SESSION_TOKEN}"
-    fi
-
-}
 
 for i in "$@"
 do
