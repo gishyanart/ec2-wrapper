@@ -11,6 +11,7 @@ usage() {
     stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'aws'
     reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'aws'
     terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME 'aws'
+    state     INSTANCE_NAME:    Return the Ec2 instance state attached to INSTANCE_NAME 'aws'
     completion:                 Output bash completion script
     show:                       Show preset configuration
     init:                       Create config file '~/.config/${0##*/}.yaml' and check requirements: 
@@ -36,6 +37,7 @@ __complete_mssh_c() {
 	[stop]=1 
 	[reboot]=1 
 	[terminate]=1 
+    [state]=1
 	[completion]=1 
 	[show]=1 
 	[init]=1
@@ -249,11 +251,11 @@ __do_work() {
     _access_key="$(yq '.configs.[env(NAME)].access_key' "$HOME/.config/${0##*/}.yaml")"
     _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.yaml")"
     _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.yaml")"
-
+    shift
     if [ "${_profile}" ]
     then
         export AWS_PROFILE="${_profile}"
-        aws ec2 "${2}" --instance-ids "${_id}" --region "${_region}"
+        aws ec2 "$@" --instance-ids "${_id}" --region "${_region}"
         if [ "${CURRENT_PROFILE}" ]
         then
             export AWS_PROFILE="${CURRENT_PROFILE}"
@@ -261,7 +263,7 @@ __do_work() {
     else
         export AWS_ACCESS_KEY_ID="${_access_key}" 
         export AWS_SECRET_ACCESS_KEY="${_secret_key}"
-        aws ec2 "${2}" --instance-ids "${_id}" --region "${_region}"
+        aws ec2 "$@" --instance-ids "${_id}" --region "${_region}"
     fi
 }
 
@@ -345,6 +347,10 @@ case "${1}" in
     terminate)
         __unset_aws
         __do_work "${2}" "terminate-instances"
+    ;;
+    state)
+        __unset_aws
+        __do_work "${2}" describe-instances --query "Reservations[*].Instances[*].[State.Name]" --output text
     ;;
     completion)
         completion
