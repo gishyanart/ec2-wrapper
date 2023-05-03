@@ -37,7 +37,7 @@ __complete_mssh_c() {
 	[stop]=1 
 	[reboot]=1 
 	[terminate]=1 
-    [state]=1
+	[state]=1 
 	[completion]=1 
 	[show]=1 
 	[init]=1
