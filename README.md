@@ -10,6 +10,7 @@ Wrapper script on [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/get
 - [python3-pip](https://github.com/pypa/pip)
 - [mssh (ec2instanceconnectcli)](https://pypi.org/project/ec2instanceconnectcli/)
 - [mikefarah/yq](https://github.com/mikefarah/yq)
+- [aws cli](https://docs.aws.amazon.com/cli/latest/userguide/getting-started-install.html) (optional)
 
 ## Installation
 
@@ -56,6 +57,7 @@ ${SCRIPT_NAME} completion | sudo tee /usr/share/bash-completion/completions/"${S
     ec2.sh stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/ec2.sh.yaml using 'aws'
     ec2.sh reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/ec2.sh.yaml using 'aws'
     ec2.sh terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME in ~/.config/ec2.sh.yaml using 'aws'
+    ec2.sh state     INSTANCE_NAME:    Return the Ec2 instance state attached to INSTANCE_NAME using 'aws'
     ec2.sh completion:                 Output bash completion script
     ec2.sh show:                       Show preset configuration
     ec2.sh init:                       Create config file in ~/.config and check requirements: grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
