@@ -4,18 +4,20 @@ usage() {
     echo "
   Usage: ${0##*/} command [INSTANCE_NAME]
   Commands:
-    add     [INSTANCE_NAME]:    Add configuration preset
-    connect   INSTANCE_NAME:    Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'mssh'
-    delete  [INSTANCE_NAME]:    Delete configuration presets for INSTANCE_ID
-    start     INSTANCE_NAME:    Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
-    stop      INSTANCE_NAME:    Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
-    reboot    INSTANCE_NAME:    Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
-    terminate INSTANCE_NAME:    Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
-    state     INSTANCE_NAME:    Return the Ec2 instance state attached to INSTANCE_NAME using 'aws'
-    completion:                 Output bash completion script
-    show:                       Show preset configuration
-    init:                       Create config file '~/.config/${0##*/}.yaml' and check requirements: 
-                                  grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
+    add     [INSTANCE_NAME]:        Add configuration preset
+    connect   INSTANCE_NAME:        Connect to AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'mssh'
+    delete  [INSTANCE_NAME]:        Delete configuration presets for INSTANCE_ID
+    start     INSTANCE_NAME:        Start AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
+    stop      INSTANCE_NAME:        Stop AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
+    reboot    INSTANCE_NAME:        Reboot AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
+    terminate INSTANCE_NAME:        Terminate AWS EC2 instance using InstanceID attached to INSTANCE_NAME using 'aws'
+    state     INSTANCE_NAME:        Return the Ec2 instance state attached to INSTANCE_NAME using 'aws'
+    set-type  INSTANCE_NAME TYPE:   Set the Ec2 instance type attached to INSTANCE_NAME using 'aws'
+    get-type  INSTANCE_NAME:        Return the Ec2 instance type attached to INSTANCE_NAME using 'aws'
+    completion:                     Output bash completion script
+    show:                           Show preset configuration
+    init:                           Create config file '~/.config/${0##*/}.yaml' and check requirements: 
+                                        grep, python3, python3-pip, mssh(ec2instanceconnectcli), mikefarah/yq
   Arguments:
     INSTANCE_NAME: EC2 instance name defined in the '~/.config/${0##*/}.yaml' file
   Options:
@@ -38,6 +40,8 @@ __complete_mssh_c() {
 	[reboot]=1 
 	[terminate]=1 
 	[state]=1 
+	[set-type]=1 
+	[get-type]=1 
 	[completion]=1 
 	[show]=1 
 	[init]=1
@@ -265,15 +269,11 @@ __do_work() {
     if [ "${_profile}" ]
     then
         export AWS_PROFILE="${_profile}"
-        aws ec2 "$@" --instance-ids "${_id}" --region "${_region}"
-        if [ "${CURRENT_PROFILE}" ]
-        then
-            export AWS_PROFILE="${CURRENT_PROFILE}"
-        fi
+        aws ec2 "$@" "${INSTANCE_ARGUMENT}" "${_id}" --region "${_region}"
     else
         export AWS_ACCESS_KEY_ID="${_access_key}" 
         export AWS_SECRET_ACCESS_KEY="${_secret_key}"
-        aws ec2 "$@" --instance-ids "${_id}" --region "${_region}"
+        aws ec2 "$@" "${INSTANCE_ARGUMENT}" "${_id}" --region "${_region}"
     fi
 }
 
@@ -303,10 +303,6 @@ connect() {
         then
             export AWS_PROFILE="${_profile}"
             mssh "${_connect_host}" -r "${_region}"
-            if [ "${CURRENT_PROFILE}" ]
-            then
-                export AWS_PROFILE="${CURRENT_PROFILE}"
-            fi
         else
             export AWS_ACCESS_KEY_ID="${_access_key}" 
             export AWS_SECRET_ACCESS_KEY="${_secret_key}"
@@ -333,7 +329,7 @@ do
     fi
 done
 
-
+INSTANCE_ARGUMENT='--instance-ids'
 
 case "${1}" in
     add)
@@ -357,6 +353,15 @@ case "${1}" in
     terminate)
         __unset_aws
         __do_work "${2}" "terminate-instances"
+    ;;
+    get-type)
+        __unset_aws
+        __do_work "${2}" describe-instances --query "Reservations[*].Instances[*].InstanceType" --output text
+    ;;
+    set-type)
+        INSTANCE_ARGUMENT='--instance-id'
+        __unset_aws
+        __do_work "${2}" modify-instance-attribute --instance-type "${3}"
     ;;
     state)
         __unset_aws
