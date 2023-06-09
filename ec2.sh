@@ -250,7 +250,8 @@ __do_work() {
     then
         _name="${1}"
     else
-        read -r -p "Input Name of the instance that you want to start: " _name
+        echo -e "\033[01;31No instance name specified\033[00m"
+        exit 1
     fi
 
     export NAME="${_name}" 
