@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-        
+
 usage() {
     echo "
   Usage: ${0##*/} command [INSTANCE_NAME]
@@ -31,19 +31,19 @@ completion() {
 echo "
 __complete_mssh_c() {
   local instance_names prev
-  declare -A command_names=( 
-  	[add]=1 
-	[connect]=1 
-	[delete]=1 
-	[start]=1 
-	[stop]=1 
-	[reboot]=1 
-	[terminate]=1 
-	[state]=1 
-	[set-type]=1 
-	[get-type]=1 
-	[completion]=1 
-	[show]=1 
+  declare -A command_names=(
+  	[add]=1
+	[connect]=1
+	[delete]=1
+	[start]=1
+	[stop]=1
+	[reboot]=1
+	[terminate]=1
+	[state]=1
+	[set-type]=1
+	[get-type]=1
+	[completion]=1
+	[show]=1
 	[init]=1
   )
   prev=\"\${COMP_WORDS[COMP_CWORD-1]}\"
@@ -114,7 +114,7 @@ init() {
         echo "Error: requirement 'mssh' does not have an execute permission on it"
         error=True
     fi
-    
+
     if [ "${error}" == 'True' ]
     then
         exit 1
@@ -146,7 +146,7 @@ show() {
     else
         answer="$(yq ".configs" "$HOME/.config/${0##*/}.yaml")"
     fi
-    
+
     if [ "${answer}" == 'null' ]
     then
         echo "Configuration for ${1} does not exist"
@@ -181,7 +181,7 @@ add() {
     fi
     if [ "${_profile}" ] && ! ( grep '\[.*\]' "$HOME/.aws/config" | grep -F " ${_profile}]" &>/dev/null )
     then
-        echo Warning: Profile "${_profile}" does not exist in "$HOME/.aws/config"
+        echo -e "\033[33mWarning: Profile ${_profile} does not exist in $HOME/.aws/config\033[00m"
     fi
     if ! [ "${_profile}" ] && ! [ "${_access_key}" ]
     then
@@ -202,14 +202,10 @@ add() {
     then
         _region='us-east-1'
     fi
-    read -r -p 'OS type. 1: Amazon Linux, 2: Ubuntu. Default is Ubuntu: ' _os
-    if ! [ "${_os}" ]
+    read -r -p 'OS username (default: 'ec2-user') : ' _user
+    if ! [ "${_user}" ]
     then
-        _user='ubuntu'
-    elif [ "${_os}" != '1' ] && [ "${_os}" != '2' ]
-    then
-        echo "${_os}" is invalid. Using default value: \"Ubuntu\"
-        _user='ubuntu'
+        _user='ec2-user'
     fi
     export ID="${_id}"
     export NAME="${_name}"
@@ -254,7 +250,7 @@ __do_work() {
         exit 1
     fi
 
-    export NAME="${_name}" 
+    export NAME="${_name}"
     name="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.yaml")"
     if ! [ "${name}" ]
     then
@@ -272,7 +268,7 @@ __do_work() {
         export AWS_PROFILE="${_profile}"
         aws ec2 "$@" "${INSTANCE_ARGUMENT}" "${_id}" --region "${_region}"
     else
-        export AWS_ACCESS_KEY_ID="${_access_key}" 
+        export AWS_ACCESS_KEY_ID="${_access_key}"
         export AWS_SECRET_ACCESS_KEY="${_secret_key}"
         aws ec2 "$@" "${INSTANCE_ARGUMENT}" "${_id}" --region "${_region}"
     fi
@@ -292,20 +288,14 @@ connect() {
         _secret_key="$(yq '.configs.[env(NAME)].secret_key' "$HOME/.config/${0##*/}.yaml")"
         _region="$(yq '.configs.[env(NAME)].region' "$HOME/.config/${0##*/}.yaml")"
         _user="$(yq '.configs.[env(NAME)].user' "$HOME/.config/${0##*/}.yaml")"
-
-        if [ "${_user}" == 'ubuntu' ] 
-        then
-            _connect_host="ubuntu@${_id}"
-        else
-            _connect_host="${_id}"
-        fi
+        _connect_host="${_user}@${_id}"
 
         if [ "${_profile}" ]
         then
             export AWS_PROFILE="${_profile}"
             mssh "${_connect_host}" -r "${_region}"
         else
-            export AWS_ACCESS_KEY_ID="${_access_key}" 
+            export AWS_ACCESS_KEY_ID="${_access_key}"
             export AWS_SECRET_ACCESS_KEY="${_secret_key}"
             mssh "${_connect_host}" -r "${_region}"
         fi
