@@ -44,6 +44,7 @@ __complete_mssh_c() {
 	[get-type]=1
 	[completion]=1
 	[show]=1
+    [list]=1
 	[init]=1
   )
   prev=\"\${COMP_WORDS[COMP_CWORD-1]}\"
@@ -53,7 +54,7 @@ __complete_mssh_c() {
      return
   elif [[ \${COMP_CWORD} -eq 2 ]]
   then
-    if ! [ \${command_names[\${prev}]} ] || [ \"\${prev}\" == 'add' ] || [ \"\${prev}\" == 'completion' ] || [ \"\${prev}\" == 'init' ]
+    if ! [ \${command_names[\${prev}]} ] || [ \"\${prev}\" == 'add' ] || [ \"\${prev}\" == 'completion' ] || [ \"\${prev}\" == 'init' ] || [ \"\${prev}\" == 'list' ]
     then
         return
     fi
@@ -274,6 +275,10 @@ __do_work() {
     fi
 }
 
+list() {
+    yq '(.configs | keys)[]' "$HOME/.config/${0##*/}.yaml"
+}
+
 connect() {
     export NAME="${1}"
     CONFIG_NAME="$(yq '.configs.[env(NAME)]' "$HOME/.config/${0##*/}.yaml")"
@@ -367,6 +372,9 @@ case "${1}" in
     ;;
     show)
         show "${2}"
+    ;;
+    list)
+        list
     ;;
     init)
         init
